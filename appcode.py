@@ -8,12 +8,19 @@ intellectual property infringement across different IP regimes.
 """
 
 import streamlit as st
-import openai
 import json
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 import re
+
+# Optional OpenAI import with fallback
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    st.warning("OpenAI library not available. Running in demo mode only.")
 
 class IPRegime(Enum):
     COPYRIGHT = "Copyright"
@@ -40,7 +47,7 @@ class IPAnalyzer:
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key
-        if api_key:
+        if api_key and OPENAI_AVAILABLE:
             openai.api_key = api_key
     
     def generate_prompt(self, regime: IPRegime, right_holder_claim: str, 
@@ -139,7 +146,7 @@ Provide thorough legal reasoning while maintaining the structured set-theoretic 
                            use_mock_analysis: bool = True) -> AnalysisResult:
         """Conduct the infringement analysis"""
         
-        if use_mock_analysis or not self.api_key:
+        if use_mock_analysis or not self.api_key or not OPENAI_AVAILABLE:
             return self._mock_analysis(regime, right_holder_claim, accused_instrumentality)
         
         prompt = self.generate_prompt(regime, right_holder_claim, accused_instrumentality, additional_context)
